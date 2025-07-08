@@ -54,9 +54,11 @@
     <div class="message" id="message"></div>
   </div>
 
+  <!-- CDN 引入 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.3/dist/umd/supabase.min.js"></script>
   <script>
-    const supabase = supabase.createClient(
+    // ✅ 正确获取全局 Supabase
+    const client = window.supabase.createClient(
       'https://wbsiowljnibegleiqfyb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2lvd2xqbmliZWdsZWlxZnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5NDM2MjksImV4cCI6MjA2NzUxOTYyOX0.ymUOnjPq6GNMN6drfz2uTNyuyjr_Xb9cfleumHIfhAk'
     );
@@ -94,8 +96,7 @@
         return;
       }
 
-      // 先设定 session
-      const { error: sessionError } = await supabase.auth.setSession({
+      const { error: sessionError } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });
@@ -106,8 +107,7 @@
         return;
       }
 
-      // 再更新密码
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await client.auth.updateUser({ password });
 
       if (error) {
         messageDiv.textContent = error.message;
