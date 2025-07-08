@@ -44,7 +44,13 @@
   </style>
 </head>
 <body>
-  <div class="box">
+  <div class="box" id="confirmBox">
+    <h3>Ready to reset your password?</h3>
+    <p>This is a protected link to prevent auto-expiration.</p>
+    <button id="startReset">Continue</button>
+  </div>
+
+  <div class="box" id="resetBox" style="display: none;">
     <h3>Reset Password</h3>
     <input type="password" id="password" placeholder="New Password" />
     <input type="password" id="confirmPassword" placeholder="Confirm Password" />
@@ -52,7 +58,6 @@
     <div class="message" id="message"></div>
   </div>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.3/dist/umd/supabase.min.js"></script>
   <script>
     const client = window.supabase.createClient(
@@ -60,22 +65,26 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2lvd2xqbmliZWdsZWlxZnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5NDM2MjksImV4cCI6MjA2NzUxOTYyOX0.ymUOnjPq6GNMN6drfz2uTNyuyjr_Xb9cfleumHIfhAk'
     );
 
-    // 自动调试 hash token
-    window.addEventListener('load', () => {
-      const hash = window.location.hash;
-      const accessToken = new URLSearchParams(hash.slice(1)).get("access_token");
-      const refreshToken = new URLSearchParams(hash.slice(1)).get("refresh_token");
+    let accessToken = null;
+    let refreshToken = null;
 
-      console.log("HASH:", hash);
-      console.log("Access Token:", accessToken);
-      console.log("Refresh Token:", refreshToken);
+    document.getElementById('startReset').addEventListener('click', () => {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(hash.slice(1));
+      accessToken = params.get("access_token");
+      refreshToken = params.get("refresh_token");
+
+      if (!accessToken || !refreshToken) {
+        alert("❌ Invalid or expired reset link.");
+        return;
+      }
+
+      // Hide confirmation, show reset form
+      document.getElementById('confirmBox').style.display = 'none';
+      document.getElementById('resetBox').style.display = 'block';
 
       const msg = document.getElementById('message');
-      if (!accessToken || !refreshToken) {
-        msg.innerHTML = "<span style='color:red;'>⚠️ Token missing or invalid. Reset link may have expired.</span>";
-      } else {
-        msg.innerHTML = "<span style='color:blue;'>✅ Token detected. You can now reset your password.</span>";
-      }
+      msg.innerHTML = "<span style='color:blue;'>✅ Token detected. You can now reset your password.</span>";
     });
 
     async function resetPassword() {
@@ -101,23 +110,13 @@
         return;
       }
 
-      const hash = window.location.hash;
-      const accessToken = new URLSearchParams(hash.slice(1)).get("access_token");
-      const refreshToken = new URLSearchParams(hash.slice(1)).get("refresh_token");
-
-      if (!accessToken || !refreshToken) {
-        msg.textContent = "Invalid or expired reset link.";
-        msg.style.color = 'red';
-        return;
-      }
-
       const { error: sessionError } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });
 
       if (sessionError) {
-        console.error("setSession error:", sessionError); // 👈 需要你贴出这行的输出
+        console.error("setSession error:", sessionError);
         msg.textContent = "Session error: " + sessionError.message;
         msg.style.color = 'red';
         return;
