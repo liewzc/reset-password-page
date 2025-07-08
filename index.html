@@ -6,76 +6,93 @@
   <title>Reset Password</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
+      font-family: sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      background: #f2f2f2;
     }
-    .container {
+    .box {
       background: white;
       padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 320px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 300px;
     }
     input {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
+      margin: 8px 0;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;
     }
     button {
       width: 100%;
       padding: 10px;
-      margin-top: 20px;
-      background: #007bff;
+      background: #0070f3;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
+    }
+    .message {
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Reset Password</h2>
-    <input type="password" id="new-password" placeholder="New Password" />
-    <input type="password" id="confirm-password" placeholder="Confirm Password" />
-    <button onclick="submitReset()">Update Password</button>
+  <div class="box">
+    <h3>Reset Password</h3>
+    <input type="password" id="password" placeholder="New Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+    <button onclick="resetPassword()">Update Password</button>
+    <div class="message" id="message"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.3/dist/umd/supabase.min.js"></script>
   <script>
     const supabase = supabase.createClient(
-      "https://wbsiowljnibegleiqfyb.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2lvd2xqbmliZWdsZWlxZnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5NDM2MjksImV4cCI6MjA2NzUxOTYyOX0.ymUOnjPq6GNMN6drfz2uTNyuyjr_Xb9cfleumHIfhAk"
+      'https://wbsiowljnibegleiqfyb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2lvd2xqbmliZWdsZWlxZnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5NDM2MjksImV4cCI6MjA2NzUxOTYyOX0.ymUOnjPq6GNMN6drfz2uTNyuyjr_Xb9cfleumHIfhAk'
     );
 
-    async function submitReset() {
-      const newPassword = document.getElementById("new-password").value;
-      const confirmPassword = document.getElementById("confirm-password").value;
+    async function resetPassword() {
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const messageDiv = document.getElementById('message');
 
-      if (!newPassword || !confirmPassword) {
-        alert("Please fill in both fields.");
+      if (password !== confirm) {
+        messageDiv.textContent = "Passwords do not match.";
+        messageDiv.style.color = 'red';
         return;
       }
 
-      if (newPassword !== confirmPassword) {
-        alert("Passwords do not match.");
+      const hash = window.location.hash;
+      const accessToken = new URLSearchParams(hash.slice(1)).get("access_token");
+
+      if (!accessToken) {
+        messageDiv.textContent = "No access token found.";
+        messageDiv.style.color = 'red';
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: accessToken, // 临时也用它（虽然不是最优，但重设密码流程可行）
+      });
+
+      const { data, error } = await supabase.auth.updateUser({
+        password: password,
       });
 
       if (error) {
-        alert("Error: " + error.message);
+        messageDiv.textContent = error.message;
+        messageDiv.style.color = 'red';
       } else {
-        alert("Password updated successfully!");
+        messageDiv.textContent = "Password updated successfully!";
+        messageDiv.style.color = 'green';
       }
     }
   </script>
