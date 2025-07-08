@@ -68,23 +68,23 @@
     let accessToken = null;
     let refreshToken = null;
 
-    document.getElementById('startReset').addEventListener('click', () => {
-      const raw = window.location.hash || window.location.search;
-      const params = new URLSearchParams(raw.replace(/^#|\?/, ''));
-      accessToken = params.get("access_token");
-      refreshToken = params.get("refresh_token");
+    document.getElementById('startReset').addEventListener('click', async () => {
+      const { data: { session }, error } = await client.auth.getSession();
 
-      if (!accessToken || !refreshToken) {
+      if (!session || error) {
         alert("❌ Invalid or expired reset link.");
         return;
       }
 
-      // Hide confirmation, show reset form
+      accessToken = session.access_token;
+      refreshToken = session.refresh_token;
+
+      // Show form
       document.getElementById('confirmBox').style.display = 'none';
       document.getElementById('resetBox').style.display = 'block';
 
       const msg = document.getElementById('message');
-      msg.innerHTML = "<span style='color:blue;'>✅ Token detected. You can now reset your password.</span>";
+      msg.innerHTML = "<span style='color:blue;'>✅ Session found. You can now reset your password.</span>";
     });
 
     async function resetPassword() {
