@@ -117,8 +117,9 @@
       });
 
       if (sessionError) {
-        console.error("setSession error:", sessionError); // 打印完整对象
-        msg.innerHTML = `<span style="color: red;">Session error: ${sessionError.message || "Unknown error"}</span>`;
+        console.error("setSession error:", sessionError); // 👈 需要你贴出这行的输出
+        msg.textContent = "Session error: " + sessionError.message;
+        msg.style.color = 'red';
         return;
       }
 
