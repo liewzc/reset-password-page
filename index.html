@@ -63,63 +63,73 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2lvd2xqbmliZWdsZWlxZnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5NDM2MjksImV4cCI6MjA2NzUxOTYyOX0.ymUOnjPq6GNMN6drfz2uTNyuyjr_Xb9cfleumHIfhAk'
     );
 
-    async function resetPassword() {
-      const password = document.getElementById('password').value.trim();
-      const confirm = document.getElementById('confirmPassword').value.trim();
-      const messageDiv = document.getElementById('message');
+  async function resetPassword() {
+    const password = document.getElementById('password').value.trim();
+    const confirm = document.getElementById('confirmPassword').value.trim();
+    const messageDiv = document.getElementById('message');
 
-      if (!password || !confirm) {
-        messageDiv.textContent = "Please fill in both fields.";
-        messageDiv.style.color = 'red';
-        return;
-      }
-
-      if (password.length < 6) {
-        messageDiv.textContent = "Password must be at least 6 characters.";
-        messageDiv.style.color = 'red';
-        return;
-      }
-
-      if (password !== confirm) {
-        messageDiv.textContent = "Passwords do not match.";
-        messageDiv.style.color = 'red';
-        return;
-      }
-
-      // 获取 token（hash 中的 access_token 和 refresh_token）
-      const hash = window.location.hash;
-      const accessToken = new URLSearchParams(hash.slice(1)).get("access_token");
-      const refreshToken = new URLSearchParams(hash.slice(1)).get("refresh_token");
-
-      if (!accessToken || !refreshToken) {
-        messageDiv.textContent = "Invalid or expired link.";
-        messageDiv.style.color = 'red';
-        return;
-      }
-
-      // 设置 Session
-      const { error: sessionError } = await client.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (sessionError) {
-        messageDiv.textContent = "Session error: " + sessionError.message;
-        messageDiv.style.color = 'red';
-        return;
-      }
-
-      // 更新密码
-      const { error } = await client.auth.updateUser({ password });
-
-      if (error) {
-        messageDiv.textContent = error.message;
-        messageDiv.style.color = 'red';
-      } else {
-        messageDiv.textContent = "Password updated successfully!";
-        messageDiv.style.color = 'green';
-      }
+    if (!password || !confirm) {
+      messageDiv.textContent = "Please fill in both fields.";
+      messageDiv.style.color = 'red';
+      return;
     }
+
+    if (password.length < 6) {
+      messageDiv.textContent = "Password must be at least 6 characters.";
+      messageDiv.style.color = 'red';
+      return;
+    }
+
+    if (password !== confirm) {
+      messageDiv.textContent = "Passwords do not match.";
+      messageDiv.style.color = 'red';
+      return;
+    }
+
+    // ✅ 获取 hash 中的 token
+    const hash = window.location.hash;
+    const accessToken = new URLSearchParams(hash.slice(1)).get("access_token");
+    const refreshToken = new URLSearchParams(hash.slice(1)).get("refresh_token");
+
+    // ✅ Debug 输出
+    console.log("HASH:", hash);
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
+
+    // ✅ 显示在页面上用于测试（上线前请删除）
+    if (accessToken && refreshToken) {
+      messageDiv.innerHTML = `<div style="color:blue;">Access Token (partial): ${accessToken.slice(0, 10)}...<br>Refresh Token (partial): ${refreshToken.slice(0, 10)}...</div>`;
+    }
+
+    if (!accessToken || !refreshToken) {
+      messageDiv.textContent = "Invalid or expired link. Tokens missing.";
+      messageDiv.style.color = 'red';
+      return;
+    }
+
+    // 设置 Session
+    const { error: sessionError } = await client.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionError) {
+      messageDiv.textContent = "Session error: " + sessionError.message;
+      messageDiv.style.color = 'red';
+      return;
+    }
+
+    // 更新密码
+    const { error } = await client.auth.updateUser({ password });
+
+    if (error) {
+      messageDiv.textContent = error.message;
+      messageDiv.style.color = 'red';
+    } else {
+      messageDiv.textContent = "Password updated successfully!";
+      messageDiv.style.color = 'green';
+    }
+  }
   </script>
 </body>
 </html>
