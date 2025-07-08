@@ -117,8 +117,8 @@
       });
 
       if (sessionError) {
-        msg.textContent = "Session error: " + sessionError.message;
-        msg.style.color = 'red';
+        console.error("setSession error:", sessionError); // 打印完整对象
+        msg.innerHTML = `<span style="color: red;">Session error: ${sessionError.message || "Unknown error"}</span>`;
         return;
       }
 
